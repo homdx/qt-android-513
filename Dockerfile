@@ -25,16 +25,6 @@ RUN mkdir /Qt5132 && cd /Qt5132 && curl -SL https://github.com/homdx/qt-download
    && set -ex && echo "${ADBCACHE_HASH}  qt-5132.tar.gz" | sha512sum -c  \
    && time tar -xf qt-5132.tar.gz && time rm qt-5132.tar.gz && date && ls /
 
-
-
-
-#&& cd / && git clone https://github.com/homdx/android_openssl.git && cd /android_openssl && echo git checkout master
-
-RUN cd /android-sdk-linux/tools/bin/ && ./sdkmanager "platforms;android-21" && cd / && git clone https://github.com/homdx/android_openssl.git  && \
-mkdir ~/android && ln -s /android-ndk-r20 ~/android/ndk-bundle && cd /android_openssl && echo time ./build_ssl.sh
-
-#COPY ssl.patch /android_openssl/ssl.patch
-
 RUN echo build OpenSSL from sources && \
 export NDK_VERSION=r20 && \
 export    ANDROID_NDK_ARCH=arch-arm c && \
