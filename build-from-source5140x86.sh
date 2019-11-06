@@ -5,7 +5,7 @@
 #time tar -xf qt514-beta2.tar.gz && time rm qt514-beta2.tar.gz && date
 #mv Qt514/ Qt
 
-export QT_VERSION=5.14.0
+export QT_VERSION=5.13.2
 echo QT version is $QT_VERSION
 echo show envs in build script
 set
@@ -29,7 +29,7 @@ cd /${FOLDER}/Qt/${QT_VERSION}/Src && echo start build && date && \
 ./configure -android-arch x86 -opensource -confirm-license -release -nomake tests -nomake examples  -no-compile-examples \
  -android-sdk /android-sdk-linux -android-ndk /android-ndk-r20 -no-warnings-are-errors --disable-rpath \
 -openssl -I /android_openssl/openssl-1.1.1d/include -L /android_openssl/arm -xplatform android-clang \
--- prefix /usr/local/x86 \
+-prefix /usr/local/x86 \
 && make -j5 -s --no-print-directory && echo end build && date && echo build done && make install && \
 cd /${FOLDER}/Qt/${QT_VERSION}/Src/qtbase/src/tools/androiddeployqt && make && make install &&  echo done1 && \
 date && rm -rf /${FOLDER} && date && echo all done ok || echo error build

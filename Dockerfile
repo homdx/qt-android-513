@@ -46,9 +46,7 @@ RUN time rm -rf /Qt5132 && mkdir /Qt5132 && cd /Qt5132 && curl -SL https://githu
    && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.ab -o qt-installed-5132.ab \
    && cat qt-installed-5132.?? > qt-5132.tar.gz && rm -vf qt-installed-5132.*  \
    && set -ex && echo "${ADBCACHE_HASH}  qt-5132.tar.gz" | sha512sum -c  \
-   && time tar -xf qt-5132.tar.gz && time rm qt-5132.tar.gz && date && ls /
-
-RUN time /build-from-source5140.sh && echo build all done || echo error build
-
+   && time tar -xf qt-5132.tar.gz && time rm qt-5132.tar.gz && date && ls / \
+   && time /build-from-source5140.sh && echo build all done && date || echo error build && date
 
 CMD tail -f /bin/true

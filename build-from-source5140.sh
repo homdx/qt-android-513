@@ -23,7 +23,7 @@ cd /${FOLDER}/Qt/${QT_VERSION}/Src && echo start build && date && LANG=C ./confi
 -release -nomake tests -nomake examples -no-compile-examples -android-sdk /android-sdk-linux -android-ndk /android-ndk-r20 \
 -xplatform android-clang -no-warnings-are-errors --disable-rpath \
 -openssl -I /android_openssl/openssl-1.1.1d/include -L /android_openssl/arm \
---prefix /usr/local/armv7 \
+-prefix /usr/local/armv7 \
 && make -j5 -s --no-print-directory && echo end build && date && echo build done \
 && make install && cd /${FOLDER}/Qt/${QT_VERSION}/Src/qtbase/src/tools/androiddeployqt && make && make install \
 && echo done1 && date && echo rm -rf /${FOLDER} && date && echo all done ok || echo error build
