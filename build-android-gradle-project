@@ -1,0 +1,115 @@
+#!/bin/bash
+# QT-CI Project
+# License: Apache-2.0
+# https://github.com/homdx/qtci
+
+echo Sdk28 Ndk r19c and Clang builder debian 10
+export NDK_VERSION=r20
+export    ANDROID_NDK_ARCH=arch-arm
+export    ANDROID_NDK_EABI=llvm
+export    ANDROID_NDK_HOST=linux-x86_64
+export    ANDROID_NDK_TOOLCHAIN_PREFIX=arm-linux-androideabi
+export    ANDROID_NDK_TOOLCHAIN_VERSION=4.9
+
+set -e
+
+if [ $# -lt 1 ]
+then
+    echo build-android-gradle-project pro
+    exit -1
+fi
+
+JARSIGNER=`which jarsigner`
+
+PRO=$1
+
+if [ -z "$QMAKE"]
+then
+
+  if [ -n "$QT_HOME" ]
+  then
+     QMAKE=$QT_HOME/android_armv7/bin/qmake
+     TRANSLATIONS=$QT_HOME/android_armv7/bin/lrelease
+     PATH=$QT_HOME/android_armv7/bin:$PATH
+  else
+     QMAKE=qmake
+     TRANSLATIONS=lrelease
+  fi
+
+fi
+
+if [ -z "$ANDROID_TARGET_SDK_VERSION" ]
+then
+  ANDROID_TARGET_SDK_VERSION="28"
+fi
+
+echo $QMAKE
+
+if [ -n "$KEYSTORE" ]
+then
+    echo "Key store file: $KEYSTORE"
+    if [ ! -f "$KEYSTORE" ]
+    then
+        echo "Key store file not found!";
+        exit -1
+    fi
+
+    if [ -z "$KEYPASS" ]
+    then
+       echo "KEYPASS is absent"
+       exit -1
+    fi
+    DEPLOY_ARGS="--sign $KEYSTORE $KEYALIAS --storepass $KEYPASS "
+fi
+
+set -v
+$QMAKE $PRO
+#old version with gcc use: -r -spec android-g++
+
+ANDROID_BUILD_PATH=`pwd`/android-build
+
+JSON=`ls *deployment-settings.json`
+make clean
+echo Make and update translation files && $TRANSLATIONS ${PRO} || echo no translation files
+make
+make install INSTALL_ROOT=${ANDROID_BUILD_PATH}
+
+androiddeployqt --release --verbose --input $JSON --output `pwd`/android-build --deployment bundled --android-platform android-${ANDROID_TARGET_SDK_VERSION} --gradle --no-gdbserver $DEPLOY_ARGS
+
+
+#APK=${ANDROID_BUILD_PATH}/build/outputs/apk/release/android-build-release-unsigned.apk
+##/build/outputs/apk/android-build-release-signed.apk
+
+#echo 'now is ' $APK
+
+#if [ ! -f $APK ]
+#then
+#APK=${ANDROID_BUILD_PATH}/build/outputs/apk/android-build-debug.apk
+#fi
+
+#APK2=${ANDROID_BUILD_PATH}/build/outputs/apk/debug/android-build-release-signed.apk
+
+#if [ ! -f $APK2 ]
+#then
+#APK=${ANDROID_BUILD_PATH}/build/outputs/apk/debug/android-build-debug.apk
+#fi
+
+APK=${ANDROID_BUILD_PATH}/build/outputs/apk/release/android-build-release-unsigned.apk
+#if [ ! -f $APK3 ]
+#then
+#echo found and setup apk variable ${APK3}
+#export APK=${APK3}
+#fi
+
+echo "Output APK: $APK"
+
+jarsigner -verbose -keystore ~/.android/debug.keystore -storepass android -keypass android $APK androiddebugkey
+
+if [ ! -z "$JARSIGNER" ]
+then
+     $JARSIGNER -verify -verbose -certs $APK
+fi
+
+set +ex
+echo Copy Resulted apk $APK to $HOME
+cp -vf $APK $HOME/release.apk
