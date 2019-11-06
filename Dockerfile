@@ -17,6 +17,24 @@ RUN JAVA_HOME=$(dirname $( readlink -f $(which java) )) \
 RUN cd /android-sdk-linux/tools/bin/ && ./sdkmanager "platforms;android-21" && cd / && git clone https://github.com/homdx/android_openssl.git  && \
 mkdir ~/android && ln -s /android-ndk-r20 ~/android/ndk-bundle && cd /android_openssl && echo time ./build_ssl.sh
 
+ARG ADBCACHE_HASH=2d79d59fb56374337f3b7b09712f3d2e92b6b494d9a386861fdffe3879246a0ca792ab9c295a20beb1835c063aff5736ea1c559ab6765dc490add4b9fc337bd5
+
+RUN mkdir /Qt5132 && cd /Qt5132 && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.aa -o qt-installed-5132.aa \
+   && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.ab -o qt-installed-5132.ab \
+   && cat qt-installed-5132.?? > qt-5132.tar.gz && rm -vf qt-installed-5132.*  \
+   && set -ex && echo "${ADBCACHE_HASH}  qt-5132.tar.gz" | sha512sum -c  \
+   && time tar -xf qt-5132.tar.gz && time rm qt-5132.tar.gz && date && ls /
+
+
+
+
+#&& cd / && git clone https://github.com/homdx/android_openssl.git && cd /android_openssl && echo git checkout master
+
+RUN cd /android-sdk-linux/tools/bin/ && ./sdkmanager "platforms;android-21" && cd / && git clone https://github.com/homdx/android_openssl.git  && \
+mkdir ~/android && ln -s /android-ndk-r20 ~/android/ndk-bundle && cd /android_openssl && echo time ./build_ssl.sh
+
+#COPY ssl.patch /android_openssl/ssl.patch
+
 RUN echo build OpenSSL from sources && \
 export NDK_VERSION=r20 && \
 export    ANDROID_NDK_ARCH=arch-arm c && \
@@ -29,12 +47,18 @@ export ANDROID_NDK_HOME=/android-ndk-r20 && \
 cd /android_openssl/ && git checkout 5140  && echo patch -p0 ssl.patch && echo start build ssl && date && time ./build_ssl.sh && date && echo build done && \
 ls -la arm
 
-ADD https://github.com/homdx/qt-android-513/releases/download/1/Qt-5.13.2-r20.tar.gz /usr/local
+COPY build-from-source5140x86.sh /
+COPY build-from-source5140.sh /
 
-ENV NDK_VERSION=r20
-ENV PATH=/usr/local/Qt-5.13.2/bin:$PATH
-ENV ANDROID_NDK_HOME=/android-ndk-r20
+RUN cd /android-sdk-linux/tools/bin && ./sdkmanager "build-tools;29.0.2" && time /build-from-source5140x86.sh && echo build all done || echo error build
 
-ADD build-android-gradle-project /usr/bin/
+RUN time rm -rf /Qt5132 && mkdir /Qt5132 && cd /Qt5132 && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.aa -o qt-installed-5132.aa \
+   && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.ab -o qt-installed-5132.ab \
+   && cat qt-installed-5132.?? > qt-5132.tar.gz && rm -vf qt-installed-5132.*  \
+   && set -ex && echo "${ADBCACHE_HASH}  qt-5132.tar.gz" | sha512sum -c  \
+   && time tar -xf qt-5132.tar.gz && time rm qt-5132.tar.gz && date && ls /
+
+RUN time /build-from-source5140.sh && echo build all done || echo error build
+
 
 CMD tail -f /bin/true
