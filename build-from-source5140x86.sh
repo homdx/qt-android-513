@@ -32,4 +32,4 @@ cd /${FOLDER}/Qt/${QT_VERSION}/Src && echo start build && date && \
 -prefix /usr/local/x86 \
 && make -j5 -s --no-print-directory && echo end build && date && echo build done && make install && \
 cd /${FOLDER}/Qt/${QT_VERSION}/Src/qtbase/src/tools/androiddeployqt && make && make install &&  echo done1 && \
-date && rm -rf /${FOLDER} && date && echo all done ok || echo error build
+date && cd / && rm -rf /${FOLDER} && date && echo all done ok || echo error build

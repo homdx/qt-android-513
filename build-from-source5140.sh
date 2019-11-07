@@ -26,4 +26,4 @@ cd /${FOLDER}/Qt/${QT_VERSION}/Src && echo start build && date && LANG=C ./confi
 -prefix /usr/local/armv7 \
 && make -j5 -s --no-print-directory && echo end build && date && echo build done \
 && make install && cd /${FOLDER}/Qt/${QT_VERSION}/Src/qtbase/src/tools/androiddeployqt && make && make install \
-&& echo done1 && date && echo rm -rf /${FOLDER} && date && echo all done ok || echo error build
+&& echo done1 && date && cd / && rm -rf /${FOLDER} && date && echo all done ok || echo error build

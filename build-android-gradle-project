@@ -3,13 +3,35 @@
 # License: Apache-2.0
 # https://github.com/homdx/qtci
 
-echo Sdk28 Ndk r19c and Clang builder debian 10
-export NDK_VERSION=r20
-export    ANDROID_NDK_ARCH=arch-arm
-export    ANDROID_NDK_EABI=llvm
-export    ANDROID_NDK_HOST=linux-x86_64
-export    ANDROID_NDK_TOOLCHAIN_PREFIX=arm-linux-androideabi
-export    ANDROID_NDK_TOOLCHAIN_VERSION=4.9
+echo Sdk28 Ndk r20 and Clang builder fedora 31
+#echo export NDK_VERSION=r20
+#echo export    ANDROID_NDK_ARCH=arch-arm
+#echo export    ANDROID_NDK_EABI=llvm
+#echo export    ANDROID_NDK_HOST=linux-x86_64
+#echo export    ANDROID_NDK_TOOLCHAIN_PREFIX=arm-linux-androideabi
+#echo export    ANDROID_NDK_TOOLCHAIN_VERSION=4.9
+#echo export DEBIAN_FRONTEND=noninteractive
+
+if [ -z "$emul" ]
+then
+echo "not defined variable emul. compile for armv7"
+export QT_HOME=/usr/local/armv7
+export PATH=/usr/local/armv7/bin:$PATH
+else
+echo "defined emul variable. compile for x86 i386 emulator android"
+export QT_HOME=/usr/local/x86
+export PATH=/usr/local/x86/bin:$PATH
+fi
+
+echo $PATH
+sleep 10
+#export ANDROID_HOME=/tools
+#export  ANDROID_SDK_ROOT=${ANDROID_HOME}
+#export    ANDROID_NDK_PLATFORM=${SDK_PLATFORM}
+#export    ANDROID_NDK_ROOT=${ANDROID_HOME}/ndk-${NDK_VERSION}
+#export ANDROID_NDK_TOOLS_PREFIX=${ANDROID_NDK_TOOLCHAIN_PREFIX}
+#export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT
+#export PATH=/tools/tools/bin:$PATH
 
 set -e
 
@@ -28,9 +50,9 @@ then
 
   if [ -n "$QT_HOME" ]
   then
-     QMAKE=$QT_HOME/android_armv7/bin/qmake
-     TRANSLATIONS=$QT_HOME/android_armv7/bin/lrelease
-     PATH=$QT_HOME/android_armv7/bin:$PATH
+     QMAKE=$QT_HOME/bin/qmake
+     TRANSLATIONS=$QT_HOME/bin/lrelease
+     PATH=$QT_HOME/bin:$PATH
   else
      QMAKE=qmake
      TRANSLATIONS=lrelease
@@ -77,29 +99,33 @@ make install INSTALL_ROOT=${ANDROID_BUILD_PATH}
 androiddeployqt --release --verbose --input $JSON --output `pwd`/android-build --deployment bundled --android-platform android-${ANDROID_TARGET_SDK_VERSION} --gradle --no-gdbserver $DEPLOY_ARGS
 
 
-#APK=${ANDROID_BUILD_PATH}/build/outputs/apk/release/android-build-release-unsigned.apk
+APK=${ANDROID_BUILD_PATH}/build/outputs/apk/release/android-build-release-unsigned.apk
 ##/build/outputs/apk/android-build-release-signed.apk
 
-#echo 'now is ' $APK
+echo 'now is ' $APK
 
-#if [ ! -f $APK ]
-#then
-#APK=${ANDROID_BUILD_PATH}/build/outputs/apk/android-build-debug.apk
-#fi
+if [ ! -f $APK ]
+then
+APK2=${ANDROID_BUILD_PATH}/build/outputs/apk/android-build-debug.apk
+fi
 
 #APK2=${ANDROID_BUILD_PATH}/build/outputs/apk/debug/android-build-release-signed.apk
 
-#if [ ! -f $APK2 ]
-#then
-#APK=${ANDROID_BUILD_PATH}/build/outputs/apk/debug/android-build-debug.apk
-#fi
+if [ ! -f $APK2 ]
+then
+APK2=${ANDROID_BUILD_PATH}/build/outputs/apk/debug/android-build-debug.apk
+else
+APK=${APK2}
+fi
 
-APK=${ANDROID_BUILD_PATH}/build/outputs/apk/release/android-build-release-unsigned.apk
-#if [ ! -f $APK3 ]
-#then
-#echo found and setup apk variable ${APK3}
+APK2=${ANDROID_BUILD_PATH}/build/outputs/apk/release/android-build-release-unsigned.apk
+if [ ! -f $APK2 ]
+then
+echo not found and setup apk variable ${APK2}
 #export APK=${APK3}
-#fi
+else
+APK=${APK2}
+fi
 
 echo "Output APK: $APK"
 
