@@ -17,11 +17,13 @@ RUN JAVA_HOME=$(dirname $( readlink -f $(which java) )) \
 RUN cd /android-sdk-linux/tools/bin/ && ./sdkmanager "platforms;android-21" && cd / && git clone https://github.com/homdx/android_openssl.git  && \
 mkdir ~/android && ln -s /android-ndk-r20 ~/android/ndk-bundle && cd /android_openssl && echo time ./build_ssl.sh
 
-ARG ADBCACHE_HASH=8b2d0fd1ed9314070e23b0f6e4c5b5c242670990edcbc2c339a7d4ac8257dad41059796f6ccc8b1bb0037d206bdfe317677fceee800c94f0b619762ca059cbe0
+ARG ADBCACHE_HASH=2d79d59fb56374337f3b7b09712f3d2e92b6b494d9a386861fdffe3879246a0ca792ab9c295a20beb1835c063aff5736ea1c559ab6765dc490add4b9fc337bd5
 
-RUN cd /usr/local && curl -SL https://github.com/homdx/qt-android-513/releases/download/1/qt5132-x86-armv7.tar.gz -o qt-5132.tar.gz \
+RUN mkdir /Qt5132 && cd /Qt5132 && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.aa -o qt-installed-5132.aa \
+   && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.ab -o qt-installed-5132.ab \
+   && cat qt-installed-5132.?? > qt-5132.tar.gz && rm -vf qt-installed-5132.*  \
    && set -ex && echo "${ADBCACHE_HASH}  qt-5132.tar.gz" | sha512sum -c  \
-   && time tar -xf qt-5132.tar.gz && time rm qt-5132.tar.gz && date && ls -la
+   && time tar -xf qt-5132.tar.gz && time rm qt-5132.tar.gz && date && ls /
 
 RUN echo build OpenSSL from sources && \
 export NDK_VERSION=r20 && \
@@ -35,6 +37,16 @@ export ANDROID_NDK_HOME=/android-ndk-r20 && \
 cd /android_openssl/ && git checkout 5140  && echo patch -p0 ssl.patch && echo start build ssl && date && time ./build_ssl.sh && date && echo build done && \
 ls -la arm
 
-ADD build-android-gradle-project  /usr/bin/
+COPY build-from-source5140x86.sh /
+COPY build-from-source5140.sh /
+
+RUN cd /android-sdk-linux/tools/bin && ./sdkmanager "build-tools;29.0.2" && time /build-from-source5140x86.sh && echo build all done || echo error build
+
+RUN time rm -rf /Qt5132 && mkdir /Qt5132 && cd /Qt5132 && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.aa -o qt-installed-5132.aa \
+   && curl -SL https://github.com/homdx/qt-download-2/releases/download/3/qt-installed-5132.ab -o qt-installed-5132.ab \
+   && cat qt-installed-5132.?? > qt-5132.tar.gz && rm -vf qt-installed-5132.*  \
+   && set -ex && echo "${ADBCACHE_HASH}  qt-5132.tar.gz" | sha512sum -c  \
+   && time tar -xf qt-5132.tar.gz && time rm qt-5132.tar.gz && date && ls / \
+   && time /build-from-source5140.sh && echo build all done && date || echo error build && date
 
 CMD tail -f /bin/true
