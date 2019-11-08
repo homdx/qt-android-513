@@ -1,3 +1,4 @@
+cat build-from-source5140.sh
 #!/bin/bash
 
 export QT_VERSION=5.13.2
@@ -23,7 +24,7 @@ cd /${FOLDER}/Qt/${QT_VERSION}/Src && \
 git init && \
 git config --global user.email "you@example.com" && \
 git config --global user.name "Your Name" && \
-echo start armv7 >>/1.txt && \
+echo start armv7 >>/1.txt \
 date >>/1.txt && git add . && date >>/1.txt && git commit -m 'initial' --quiet && \
 date && git gc --prune=now --force   && echo done prune && sleep 120 && \
 echo start build && date && LANG=C ./configure -android-arch armeabi-v7a -opensource -confirm-license \
@@ -53,11 +54,11 @@ date && \
 echo git prune done >>/1.txt && \
 echo done git prune && \
 time tar -czf /git2.tar.gz .git/ && echo done tar >>/1.txt && echo done tar && date >>/1.txt \
-&& echo done1 && date && cd /${FOLDER}/Qt/${QT_VERSION}/Src && cd / && \
+&& echo done1 && date && cd /${FOLDER}/Qt/${QT_VERSION}/Src && rm -rf .git/ && tar -czf /armv7.tar.gz . && cd / && \
 rm -rf /${FOLDER} && date && echo all done ok || echo error build
 
-
 ----
+cat build-from-source5140x86.sh
 #!/bin/bash
 
 #cd /Qt5140
@@ -116,5 +117,7 @@ date >>1.txt && \
 date && \
 echo git prune done >>/1.txt && \
 echo done git prune && \
-time tar -czf /git.tar.gz .git/ && echo done tar >>/1.txt && echo done tar && date >>/1.txt && cd / && \
+time tar -czf /x86.tar.gz .git/ && echo done tar >>/1.txt && echo done tar && date >>/1.txt && cd / && \
+cd /${FOLDER}/Qt/${QT_VERSION}/Src && \
+rm -rf .git/ && tar -czf /x86.tar.gz . && \
 rm -rf /${FOLDER} && date && echo all done ok || echo error build
