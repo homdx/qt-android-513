@@ -1,0 +1,78 @@
+FROM fedora:31
+
+ARG NDK_VERSION=r20
+ARG SDK_INSTALL_PARAMS=platform-tool,build-tools;29.0.2
+ARG ANDROID_SDK_ROOT=/android-sdk-linux
+
+RUN dnf update -y && dnf install clang unzip wget time java-1.8.0-openjdk java-1.8.0-openjdk-devel aria2 which patch git make -y
+
+#COPY install-android-sdk /tmp/install-android-sdk
+RUN JAVA_HOME=$(dirname $( readlink -f $(which java) )) \
+   && JAVA_HOME=$(realpath "$JAVA_HOME"/../) \
+   && export JAVA_HOME && echo $JAVA_HOME \
+   && wget https://raw.githubusercontent.com/homdx/qtci/513/bin/install-android-sdk --directory-prefix=/tmp \
+   &&  chmod u+rx /tmp/install-android-sdk \
+   && /tmp/install-android-sdk $SDK_INSTALL_PARAMS
+
+RUN cd /android-sdk-linux/tools/bin/ && ./sdkmanager "platforms;android-21" && cd / && git clone https://github.com/homdx/android_openssl.git  && \
+mkdir ~/android && ln -s /android-ndk-r20 ~/android/ndk-bundle && cd /android_openssl && echo time ./build_ssl.sh
+
+
+
+RUN cd /android-sdk-linux/tools/bin && ./sdkmanager "build-tools;29.0.2" && \
+echo build OpenSSL from sources && \
+export NDK_VERSION=r20 && \
+export    ANDROID_NDK_ARCH=arch-arm c && \
+export    ANDROID_NDK_EABI=llvm c && \
+export    ANDROID_NDK_HOST=linux-x86_64 c && \
+export    ANDROID_NDK_TOOLCHAIN_PREFIX=arm-linux-androideabi c && \
+export    ANDROID_NDK_TOOLCHAIN_VERSION=4.9 c && \
+export DEBIAN_FRONTEND=noninteractive c && \
+export ANDROID_NDK_HOME=/android-ndk-r20 && \
+cd /android_openssl/ && git checkout 5140  && echo patch -p0 ssl.patch && echo start build ssl && date && time ./build_ssl.sh && date && echo build done && \
+ls -la arm
+
+#COPY build-from-source5140dev.sh /
+
+#ARG ADBCACHE_HASH=3e9c6527f15fc086a50b575b74d8903cc8b322678e5a905ce373598c4b333475cf33f6d50abff548a47edcac471141e9d89236a2fe180601e0960fd112051098
+#ARG RELEASEVER=5.14.0-1
+
+#COPY build-from-source5140dev.sh /
+
+#ARG ADBCACHE_HASH=3e9c6527f15fc086a50b575b74d8903cc8b322678e5a905ce373598c4b333475cf33f6d50abff548a47edcac471141e9d89236a2fe180601e0960fd112051098
+#ARG ADBCACHE_HASH=0ccf3272db15fb9520e75ff584b784a7d02ac3630b66b7cdadc6b741c7fe8cfac52124e09eb876e2da319763e4dcdef3496b56ddaac9af700d268f565ca71bad
+
+ARG ADBCACHE_HASH=17449c9a431740a0c228a1b0fbd5fd4ff381a703fee3a7b25cde474b4d56ffc9bd126bf6b81f62ff3bac36fc5df6e9de4674024523314825278a6e3ba16b48f3
+ARG RELEASEVER=5.14.0-1
+
+#ARG RELEASEVER=3
+
+#RUN cd / && echo get sources and compile && curl -SL https://github.com/homdx/qt-android-513/releases/download/${RELEASEVER}/qt5140.aa -o qt5140.aa \
+#   && curl -SL https://github.com/homdx/qt-android-513/releases/download/${RELEASEVER}/qt5140.ab -o qt5140.ab \
+#   && cat qt5140.?? > qt-5140src.tar.gz && rm -vf qt5140.*  \
+#   && set -ex && echo "${ADBCACHE_HASH}  qt-5140src.tar.gz" | sha512sum -c  \
+#   && time tar -xf qt-5140src.tar.gz && time rm qt-5140src.tar.gz && date && ls / && time /build-from-source5140dev.sh && echo build all don || echo error done
+
+#ADD qt5-1111.tar.gz /
+
+
+
+RUN cd / && echo get sources and compile && curl -SL https://github.com/homdx/qt-android-513/releases/download/${RELEASEVER}/qt514-3.aa -o qt5140.aa \
+   && curl -SL https://github.com/homdx/qt-android-513/releases/download/${RELEASEVER}/qt514-3.ab -o qt5140.ab \
+   && cat qt5140.?? > qt-5140src.tar.gz && rm -vf qt5140.*  \
+   && dd if=qt-5140src.tar.gz of=/dev/null status=progress \
+   && set -ex && echo "${ADBCACHE_HASH}  qt-5140src.tar.gz" | sha512sum -c  \
+   && time tar -xf qt-5140src.tar.gz && time rm qt-5140src.tar.gz && date && ls / && echo time /build-from-source5140dev.sh && echo build all don || echo error done
+
+COPY build-from-source5140dev.sh /
+
+#RUN echo 3 file && cd / && echo get sources and compile && curl -SL https://github.com/homdx/qt-download-2/releases/download/${RELEASEVER}/qt514.aa -o qt5140.aa \
+#   && curl -SL https://github.com/homdx/qt-download-2/releases/download/${RELEASEVER}/qt514.ab -o qt5140.ab \
+#   && curl -SL https://github.com/homdx/qt-download-2/releases/download/${RELEASEVER}/qt514.ac -o qt5140.ac \ 
+#   && cat qt5140.?? > qt-5140src.tar.gz && rm -vf qt514.*  \
+#   && set -ex && echo "${ADBCACHE_HASH}  qt-5140src.tar.gz" | sha512sum -c  \
+#   && time tar -xf qt-5140src.tar.gz && time rm qt-5140src.tar.gz && date && ls / && echo time /build-from-source5140dev.sh && echo build all don || echo error done
+
+RUN time /build-from-source5140dev.sh && echo build all done || echo error done
+
+CMD tail -f /bin/true
